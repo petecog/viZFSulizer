@@ -22,13 +22,18 @@
                     "bash": {
                         "path": "/bin/bash"
                     }
-                }
+                },
+                "go.toolsGopath": "/go"
             }
         }
     },
     "remoteUser": "vscode",
+    "updateRemoteUserUID": true,
+    "containerUser": "vscode",
     "mounts": [
-        "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
+        "source=${localWorkspaceFolder},target=/workspace,type=bind",
+        "source=go-tools,target=/go,type=volume"
     ],
+    "postCreateCommand": "sudo mkdir -p /go/{bin,pkg,src} && sudo chown -R vscode:vscode /go",
     "workspaceFolder": "/workspace"
 }
