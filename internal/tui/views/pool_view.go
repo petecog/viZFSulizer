@@ -9,7 +9,8 @@ import (
 )
 
 type PoolView struct {
-	pools []*zfs.Pool
+	pools    []*zfs.Pool
+	selected int
 }
 
 func NewPoolView() *PoolView {
@@ -20,37 +21,54 @@ func (pv *PoolView) Update(pools []*zfs.Pool) {
 	pv.pools = pools
 }
 
+func (pv *PoolView) SetSelected(idx int) {
+	pv.selected = idx
+}
+
 func (pv *PoolView) Render() string {
 	if len(pv.pools) == 0 {
 		return "No pools found"
 	}
 
 	var sb strings.Builder
-	sb.WriteString(styles.Title.Render("ZFS Pools") + "\n\n")
 
-	for _, pool := range pv.pools {
-		poolContent := fmt.Sprintf("Pool: %s [%s]\n%s",
-			styles.PoolName.Render(pool.Name),
-			renderStatus(pool.Status),
-			renderVDev(pool.RootVDev, 0))
+	// Render tabs
+	sb.WriteString(renderTabs(pv.pools, pv.selected) + "\n\n")
 
-		// Add Cache devices if present
-		if pool.Cache != nil {
-			poolContent += renderVDev(pool.Cache, 0)
-		}
+	// Render selected pool
+	pool := pv.pools[pv.selected]
+	poolContent := fmt.Sprintf("Pool: %s [%s]\n%s",
+		styles.PoolName.Render(pool.Name),
+		renderStatus(pool.Status),
+		renderVDev(pool.RootVDev, 0))
 
-		// Add SLOG devices if present
-		if pool.Slog != nil {
-			poolContent += renderVDev(pool.Slog, 0)
-		}
-
-		boxedPool := styles.PoolBox.Render(poolContent)
-		sb.WriteString(boxedPool + "\n\n")
+	if pool.Cache != nil {
+		poolContent += renderVDev(pool.Cache, 0)
+	}
+	if pool.Slog != nil {
+		poolContent += renderVDev(pool.Slog, 0)
 	}
 
-	// Add help text at the bottom
-	sb.WriteString(styles.HelpText.Render("Press 'q' to quit, arrow keys to navigate"))
+	boxedPool := styles.PoolBox.Render(poolContent)
+	sb.WriteString(boxedPool + "\n\n")
+
+	// Update help text to include tab navigation
+	sb.WriteString(styles.HelpText.Render("Tab/Arrow Keys to switch pools • q to quit"))
 	return sb.String()
+}
+
+func renderTabs(pools []*zfs.Pool, selected int) string {
+	var tabs []string
+	for i, pool := range pools {
+		tab := pool.Name
+		if i == selected {
+			tab = styles.TabActive.Render("[ " + tab + " ]")
+		} else {
+			tab = styles.TabInactive.Render("  " + tab + "  ")
+		}
+		tabs = append(tabs, tab)
+	}
+	return strings.Join(tabs, " ")
 }
 
 func renderVDev(vdev *zfs.VDev, depth int) string {

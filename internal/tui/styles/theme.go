@@ -45,4 +45,13 @@ var (
 	HelpText = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("8")).
 			AlignHorizontal(lipgloss.Right)
+
+	// Tab styling
+	TabActive = lipgloss.NewStyle().
+			Bold(true).
+			Foreground(lipgloss.Color("4")).
+			Background(lipgloss.Color("0"))
+
+	TabInactive = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("8"))
 )
