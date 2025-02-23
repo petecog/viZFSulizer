@@ -123,7 +123,7 @@ The project uses a Dev Container that provides:
 - Simulated ZFS pools and datasets for testing
 - Required VS Code extensions
 
-### Project Structure
+## Project Structure
 
 ```
 vizfsulizer/
@@ -153,6 +153,17 @@ The project follows standard Go layout conventions:
   - `tui/`: Terminal UI implementation using Bubble Tea
   - `zfs/`: Core ZFS operations and data structures
   - `utils/`: Shared utilities used across the application
+
+### Themes and styles
+
+The themes and styles are arranged thus:
+
+internal/tui/styles/
+├── borders.go    # Border definitions
+├── colors.go     # Color scheme constants
+├── components.go # Component-specific styles (pools, vdevs, etc)
+├── text.go      # Text-related styles (titles, help text, etc)
+└── theme.go     # Main theme configuration and shared styles
 
 ## Testing
 

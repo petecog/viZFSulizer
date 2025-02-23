@@ -54,6 +54,22 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.poolView.SetSelected(m.selected)
 				m.viewport.SetContent(m.poolView.Render())
 			}
+		case "enter", "space":
+			// Toggle expanded view of current VDEV
+			if len(m.pools) > 0 {
+				m.poolView.ToggleVDevExpanded()
+				m.viewport.SetContent(m.poolView.Render())
+			}
+		case "up", "k":
+			if len(m.pools) > 0 {
+				m.poolView.NavigateVDevs(-1)
+				m.viewport.SetContent(m.poolView.Render())
+			}
+		case "down", "j":
+			if len(m.pools) > 0 {
+				m.poolView.NavigateVDevs(1)
+				m.viewport.SetContent(m.poolView.Render())
+			}
 		}
 
 	case []*zfs.Pool:

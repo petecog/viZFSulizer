@@ -9,20 +9,37 @@ import (
 )
 
 type PoolView struct {
-	pools    []*zfs.Pool
-	selected int
+	pools        []*zfs.Pool
+	selected     int
+	vdevExpanded bool
+	expandedVDev string
+	vdevView     *VDevView
 }
 
 func NewPoolView() *PoolView {
-	return &PoolView{}
+	return &PoolView{
+		selected: 0,
+	}
 }
 
 func (pv *PoolView) Update(pools []*zfs.Pool) {
 	pv.pools = pools
+	if len(pools) > 0 {
+		// Create/update VDevView with currently selected pool
+		pv.vdevView = NewVDevView(pools[pv.selected])
+	}
 }
 
 func (pv *PoolView) SetSelected(idx int) {
 	pv.selected = idx
+	if len(pv.pools) > 0 {
+		// Update VDevView when selection changes
+		pv.vdevView = NewVDevView(pv.pools[idx])
+	}
+}
+
+func (pv *PoolView) ToggleVDevExpanded() {
+	pv.vdevExpanded = !pv.vdevExpanded
 }
 
 func (pv *PoolView) Render() string {
@@ -35,26 +52,31 @@ func (pv *PoolView) Render() string {
 	// Render tabs
 	sb.WriteString(renderTabs(pv.pools, pv.selected) + "\n\n")
 
-	// Render selected pool
+	// Render selected pool overview
 	pool := pv.pools[pv.selected]
-	worstStatus := pool.GetWorstStatus() // Use pool's GetWorstStatus instead of just RootVDev
-	poolContent := fmt.Sprintf("Pool: %s [%s]\n%s",
+	worstStatus := pool.GetWorstStatus()
+	poolOverview := fmt.Sprintf("Pool: %s [%s]",
 		styles.PoolName.Render(pool.Name),
-		renderStatus(worstStatus),
-		renderVDev(pool.RootVDev, 0))
+		renderStatus(worstStatus))
 
-	if pool.Cache != nil {
-		poolContent += renderVDev(pool.Cache, 0)
+	sb.WriteString(styles.GetStatusBorderStyle(worstStatus).Render(poolOverview) + "\n\n")
+
+	// Modify VDev rendering based on expanded state
+	var vdevContent string
+	if pv.vdevExpanded {
+		vdevContent = pv.vdevView.RenderDetailed(pv.expandedVDev)
+	} else {
+		vdevContent = pv.vdevView.RenderCompact()
 	}
-	if pool.Slog != nil {
-		poolContent += renderVDev(pool.Slog, 0)
-	}
+	sb.WriteString(vdevContent)
 
-	boxedPool := styles.GetStatusBorderStyle(worstStatus).Render(poolContent)
-	sb.WriteString(boxedPool + "\n\n")
+	// Update help text to show VDEV navigation
+	helpText := "Tab/Arrow Keys to switch pools • "
+	helpText += "↑/↓ to navigate VDEVs • "
+	helpText += "Enter to expand/collapse • "
+	helpText += "q to quit"
+	sb.WriteString("\n" + styles.HelpText.Render(helpText))
 
-	// Update help text to include tab navigation
-	sb.WriteString(styles.HelpText.Render("Tab/Arrow Keys to switch pools • q to quit"))
 	return sb.String()
 }
 
@@ -72,25 +94,20 @@ func renderTabs(pools []*zfs.Pool, selected int) string {
 	return strings.Join(tabs, " ")
 }
 
-func renderVDev(vdev *zfs.VDev, depth int) string {
-	worstStatus := vdev.GetWorstStatus()
-	content := fmt.Sprintf("%s %s %s [%s]",
-		styles.TreeBranch.Render(strings.Repeat("  ", depth)+"├─"),
-		vdev.Name,
-		styles.VDevType.Render("("+vdev.Type+")"),
-		renderStatus(worstStatus))
-
-	if len(vdev.Children) > 0 {
-		childContent := ""
-		for _, child := range vdev.Children {
-			childContent += renderVDev(child, depth+1)
-		}
-		content = styles.GetStatusBorderStyle(worstStatus).Render(content + "\n" + childContent)
-	}
-
-	return content + "\n"
-}
-
+// renderStatus applies styling to a ZFS VDev status string based on its state.
+// It returns a styled string representation of the VDev status.
+//
+// The following styles are applied:
+//   - Online: Uses StatusOnline style
+//   - Degraded: Uses StatusDegraded style
+//   - Faulted: Uses StatusFaulted style
+//   - Other statuses: Returns unmodified status string
+//
+// Parameters:
+//   - status: zfs.VDevStatus representing the current state of a VDev
+//
+// Returns:
+//   - string: A styled string representation of the VDev status
 func renderStatus(status zfs.VDevStatus) string {
 	switch status {
 	case zfs.VDevStatusOnline:
@@ -102,4 +119,66 @@ func renderStatus(status zfs.VDevStatus) string {
 	default:
 		return string(status)
 	}
+}
+
+// Add these methods after the existing PoolView methods
+
+// NavigateVDevs moves the VDEV selection up or down
+// direction: -1 for up, 1 for down
+func (pv *PoolView) NavigateVDevs(direction int) {
+	// Get flat list of navigable VDEVs
+	vdevs := pv.getNavigableVDevs()
+	if len(vdevs) == 0 {
+		return
+	}
+
+	// Find current index
+	currentIdx := -1
+	for i, v := range vdevs {
+		if v.Name == pv.expandedVDev {
+			currentIdx = i
+			break
+		}
+	}
+
+	// Calculate new index with wrapping
+	if currentIdx == -1 {
+		currentIdx = 0
+	} else {
+		currentIdx = (currentIdx + direction + len(vdevs)) % len(vdevs) // Fixed missing parenthesis
+	}
+
+	// Update selected VDEV
+	pv.expandedVDev = vdevs[currentIdx].Name
+}
+
+// getNavigableVDevs returns a flat list of all VDEVs in the current pool
+func (pv *PoolView) getNavigableVDevs() []*zfs.VDev {
+	var vdevs []*zfs.VDev
+	if pv.pools == nil || len(pv.pools) == 0 {
+		return vdevs
+	}
+
+	pool := pv.pools[pv.selected]
+	// Collect all VDEVs in a flat list for navigation
+	if pool.RootVDev != nil {
+		vdevs = append(vdevs, pv.collectVDevs(pool.RootVDev)...)
+	}
+	if pool.Cache != nil {
+		vdevs = append(vdevs, pv.collectVDevs(pool.Cache)...)
+	}
+	if pool.Slog != nil {
+		vdevs = append(vdevs, pv.collectVDevs(pool.Slog)...)
+	}
+	return vdevs
+}
+
+// collectVDevs helper function to recursively collect VDEVs
+func (pv *PoolView) collectVDevs(vdev *zfs.VDev) []*zfs.VDev {
+	var vdevs []*zfs.VDev
+	vdevs = append(vdevs, vdev)
+	for _, child := range vdev.Children {
+		vdevs = append(vdevs, pv.collectVDevs(child)...)
+	}
+	return vdevs
 }
