@@ -34,6 +34,13 @@ Current features:
    - [x] Physical pool structure visualization
    - [x] Device status indicators
    - [ ] VDEV configuration display
+     - [ ] Show VDEV types (mirror, raidz1/2/3, spare, cache, log)
+     - [ ] Display individual disk properties (size, model, serial)
+     - [ ] Show read/write load distribution
+     - [ ] Indicate hot spares and their status
+     - [ ] Display redundancy levels
+     - [ ] Show capacity usage per VDEV
+     - [ ] Indicate resilvering progress when active
    - [ ] Interactive navigation
 
 1. - [ ] Change the way that dev examples/tests are provisioned - simple text files
