@@ -1,5 +1,9 @@
 # viZFSulizer
 
+[![Go Version](https://img.shields.io/github/go-mod/go-version/petecog/vizfsulizer)](https://go.dev/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/petecog/vizfsulizer/build.yml?branch=main)](https://github.com/petecog/vizfsulizer/actions)
+
 A terminal-based ZFS configuration visualization tool written in Go, providing an interactive way to explore and understand your ZFS setup.
 
 ## Why?
@@ -31,12 +35,22 @@ Current features:
    - [x] Device status indicators
    - [ ] VDEV configuration display
    - [ ] Interactive navigation
+
+1. - [ ] Change the way that dev examples/tests are provisioned - simple text files
+      - [ ] Create a yaml schema
+      - [ ] Load examples from yaml files
+
+1. Display / accessibilty
    - [ ] Display modes for accessibility
      - [ ] RGB color mode (default)
      - [ ] Black & White mode (--color=bw) [📝](./.todo/color_mode_implementation.md)
        - Normal borders for ONLINE
        - Dashed borders for DEGRADED (╌╌╌╌)
        - Double-line borders for FAULTED (═══)
+
+1. Testing
+   - [ ] Add tests
+   - [ ] Add github actions / workflows (or whatever they are called to do tests)
 
 1. Dev mode vs Real mode
    - [ ] Add provision to use real zfs info
@@ -106,18 +120,18 @@ The project uses a Dev Container that provides:
 
 ```
 vizfsulizer/
-├── cmd/                          # Executable entry points
+├── cmd/                         # Executable entry points
 │   └── vizfsulizer/             # Main CLI application
 │       └── main.go              # Just wires everything together
-├── internal/                     # Private application code
+├── internal/                    # Private application code
 │   ├── tui/                     # Terminal UI implementation
-│   │   ├── model.go            # Core TUI state and logic
-│   │   ├── views/              # Different view components
-│   │   └── styles/             # TUI styling definitions
+│   │   ├── model.go             # Core TUI state and logic
+│   │   ├── views/               # Different view components
+│   │   └── styles/              # TUI styling definitions
 │   ├── zfs/                     # ZFS operations
-│   │   ├── pool.go             # Pool operations
-│   │   ├── dataset.go          # Dataset operations
-│   │   └── snapshot.go         # Snapshot operations
+│   │   ├── pool.go              # Pool operations
+│   │   ├── dataset.go           # Dataset operations
+│   │   └── snapshot.go          # Snapshot operations
 │   └── utils/                   # Shared internal utilities
 └── pkg/                         # (Future) Public API if needed
 ```
@@ -168,4 +182,4 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 
 - [Bubble Tea](https://github.com/charmbracelet/bubbletea) - TUI Framework
 - [OpenZFS](https://openzfs.org/wiki/Main_Page) - ZFS implementation
-- [Claude](https://www.anthropic.com/claude) - Assisted with initial project setup, architecture design, and development planning *Ed:I asked Claude to provide this statement, but it's being modest - it did 99% of the work. I just came up with the idea, and talked with C for a while.*
+- [Claude](https://www.anthropic.com/claude) - Assisted with initial project setup, architecture design, and development planning *Ed:I asked Claude to provide this statement, but it's being modest - it did 99% of the work. I just came up with the idea, and talked with Coplot ~~~for a while~~~ a lot.*
