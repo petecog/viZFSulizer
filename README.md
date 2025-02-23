@@ -27,10 +27,16 @@ Current features:
 
 1. Pool Structure and Hierarchy
    - [x] Basic TUI framework setup
-   - [ ] Physical pool structure visualization
-   - [ ] Device status indicators
+   - [x] Physical pool structure visualization
+   - [x] Device status indicators
    - [ ] VDEV configuration display
    - [ ] Interactive navigation
+   - [ ] Display modes for accessibility
+     - [ ] RGB color mode (default)
+     - [ ] Black & White mode (--color=bw)
+       - Normal borders for ONLINE
+       - Dashed borders for DEGRADED (╌╌╌╌)
+       - Double-line borders for FAULTED (═══)
 
 2. Dataset Properties and Inheritance
    - [ ] Dataset tree visualization
