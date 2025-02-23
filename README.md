@@ -69,7 +69,7 @@ Current features:
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/vizfsulizer.git
+git clone https://github.com/petecog/vizfsulizer.git
 cd vizfsulizer
 ```
 

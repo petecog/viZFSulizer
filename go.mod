@@ -1,3 +1,3 @@
-module github.com/yourusername/vizfsulizer
+module github.com/petecog/vizfsulizer
 
 go 1.24.0

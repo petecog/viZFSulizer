@@ -1,5 +1,5 @@
 {
-    "name": "viZFSulizer_dev",
+    "name": "VizFSulizer Dev",
     "build": {
         "dockerfile": "Dockerfile",
         "args": {
@@ -13,62 +13,24 @@
         "vscode": {
             "extensions": [
                 "golang.go",
-                "golang.vscode-go",
-                "gotestexplorer.gotestexplorer",
-                "ms-vscode.test-adapter-converter",
-                "visualstudioexptteam.vscodeintellicode",
                 "github.copilot",
                 "eamodio.gitlens",
-                "streetsidesoftware.code-spell-checker",
                 "davidanson.vscode-markdownlint",
-                "shardulm94.trailing-spaces",
-                "timonwong.shellcheck",
-                "foxundermoon.shell-format",
-                "vscode-icons-team.vscode-icons",
-                "oderwat.indent-rainbow",
-                "christian-kohler.path-intellisense",
-                "donjayamanne.githistory",
-                "GitHub.vscode-pull-request-github",
                 "ms-azuretools.vscode-docker",
-                "github.vscode-github-actions"
+                "github.vscode-github-actions",
+                "ms-vscode-remote.remote-containers"
             ],
             "settings": {
                 "go.toolsManagement.checkForUpdates": "local",
                 "go.useLanguageServer": true,
                 "go.gopath": "/go",
-                "go.testOnSave": true,
-                "go.lintTool": "golangci-lint",
-                "go.formatTool": "gofmt",
-                "editor.formatOnSave": true,
-                "editor.renderWhitespace": "all",
-                "files.trimTrailingWhitespace": true,
-                "terminal.integrated.defaultProfile.linux": "zsh"
+                "editor.formatOnSave": true
             }
         }
     },
     "remoteUser": "vscode",
-    "containerUser": "vscode",
-    "updateRemoteUserUID": true,
-    "userEnvProbe": "loginInteractiveShell",
-    "remoteEnv": {
-        "USER_UID": "2000",
-        "USER_GID": "2000"
-    },
-    "postCreateCommand": "bash .devcontainer/setup.sh",
-    "features": {
-        "ghcr.io/devcontainers/features/common-utils:2": {
-            "installZsh": true,
-            "configureZshAsDefaultShell": true,
-            "installOhMyZsh": true,
-            "upgradePackages": true
-        },
-        "ghcr.io/devcontainers/features/go:1": {
-            "version": "latest"
-        }
-    },
     "mounts": [
-        "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
-        "source=${env:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached"
+        "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
     ],
     "workspaceFolder": "/workspace"
 }
