@@ -1,0 +1,10 @@
+# Improved command line editing
+set completion-ignore-case on
+set show-all-if-ambiguous on
+set mark-symlinked-directories on
+set colored-stats on
+set visible-stats on
+set page-completions off
+set menu-complete-display-prefix on
+"\e[A": history-search-backward
+"\e[B": history-search-forward

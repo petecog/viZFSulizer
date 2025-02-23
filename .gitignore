@@ -1,0 +1,5 @@
+bin/
+pkg/
+*.test
+*.out
+.DS_Store

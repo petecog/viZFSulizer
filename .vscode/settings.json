@@ -1,0 +1,10 @@
+{
+    "cSpell.ignorePaths": [
+        ".devcontainer",
+        "vscode-extension",
+        ".git/{info,lfs,logs,refs,objects}/**",
+        ".git/{index,*refs,*HEAD}",
+        ".vscode",
+        ".vscode-insiders"
+    ]
+}
