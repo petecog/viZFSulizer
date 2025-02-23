@@ -94,17 +94,32 @@ The project uses a Dev Container that provides:
 
 ```
 vizfsulizer/
-├── cmd/
-│   └── vizfsulizer/              # Main application entry point
-├── internal/
-│   ├── tui/                      # TUI components
-│   │   ├── views/                # Different view components
-│   │   └── styles/               # TUI styling definitions
-│   ├── zfs/                      # ZFS interaction layer
-│   └── utils/                    # Shared utilities
-├── pkg/                          # Public library code
-└── test/                         # Additional test files
+├── cmd/                          # Executable entry points
+│   └── vizfsulizer/             # Main CLI application
+│       └── main.go              # Just wires everything together
+├── internal/                     # Private application code
+│   ├── tui/                     # Terminal UI implementation
+│   │   ├── model.go            # Core TUI state and logic
+│   │   ├── views/              # Different view components
+│   │   └── styles/             # TUI styling definitions
+│   ├── zfs/                     # ZFS operations
+│   │   ├── pool.go             # Pool operations
+│   │   ├── dataset.go          # Dataset operations
+│   │   └── snapshot.go         # Snapshot operations
+│   └── utils/                   # Shared internal utilities
+└── pkg/                         # (Future) Public API if needed
 ```
+
+The project follows standard Go layout conventions:
+
+- `cmd/`: Contains the executable entry points. Each subdirectory is a separate program.
+  Keep these minimal - they should only wire together code from other packages.
+
+- `internal/`: Contains private implementation code that cannot be imported by other projects.
+  This is where most of our business logic lives.
+  - `tui/`: Terminal UI implementation using Bubble Tea
+  - `zfs/`: Core ZFS operations and data structures
+  - `utils/`: Shared utilities used across the application
 
 ## Testing
 
