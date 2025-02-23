@@ -37,9 +37,10 @@ func (pv *PoolView) Render() string {
 
 	// Render selected pool
 	pool := pv.pools[pv.selected]
+	worstStatus := pool.GetWorstStatus() // Use pool's GetWorstStatus instead of just RootVDev
 	poolContent := fmt.Sprintf("Pool: %s [%s]\n%s",
 		styles.PoolName.Render(pool.Name),
-		renderStatus(pool.Status),
+		renderStatus(worstStatus),
 		renderVDev(pool.RootVDev, 0))
 
 	if pool.Cache != nil {
@@ -49,7 +50,7 @@ func (pv *PoolView) Render() string {
 		poolContent += renderVDev(pool.Slog, 0)
 	}
 
-	boxedPool := styles.PoolBox.Render(poolContent)
+	boxedPool := styles.GetStatusBorderStyle(worstStatus).Render(poolContent)
 	sb.WriteString(boxedPool + "\n\n")
 
 	// Update help text to include tab navigation
@@ -72,18 +73,19 @@ func renderTabs(pools []*zfs.Pool, selected int) string {
 }
 
 func renderVDev(vdev *zfs.VDev, depth int) string {
+	worstStatus := vdev.GetWorstStatus()
 	content := fmt.Sprintf("%s %s %s [%s]",
 		styles.TreeBranch.Render(strings.Repeat("  ", depth)+"├─"),
 		vdev.Name,
 		styles.VDevType.Render("("+vdev.Type+")"),
-		renderStatus(vdev.Status))
+		renderStatus(worstStatus))
 
 	if len(vdev.Children) > 0 {
 		childContent := ""
 		for _, child := range vdev.Children {
 			childContent += renderVDev(child, depth+1)
 		}
-		content = styles.VDevBox.Render(content + "\n" + childContent)
+		content = styles.GetStatusBorderStyle(worstStatus).Render(content + "\n" + childContent)
 	}
 
 	return content + "\n"

@@ -15,12 +15,60 @@ type VDev struct {
 	Children []*VDev
 }
 
+// GetWorstStatus returns the worst status among this VDev and its children
+func (v *VDev) GetWorstStatus() VDevStatus {
+	worst := v.Status
+
+	for _, child := range v.Children {
+		childStatus := child.GetWorstStatus()
+		if childStatus == VDevStatusFaulted {
+			return VDevStatusFaulted
+		}
+		if childStatus == VDevStatusDegraded && worst != VDevStatusFaulted {
+			worst = VDevStatusDegraded
+		}
+	}
+	return worst
+}
+
 type Pool struct {
 	Name     string
 	Status   VDevStatus
 	RootVDev *VDev
 	Cache    *VDev
 	Slog     *VDev // Add SLOG VDev
+}
+
+// GetWorstStatus returns the worst status among this VDev and its children
+func (p *Pool) GetWorstStatus() VDevStatus {
+	worst := p.RootVDev.GetWorstStatus()
+
+	// Check Cache devices
+	if p.Cache != nil {
+		if cacheStatus := p.Cache.GetWorstStatus(); isWorse(cacheStatus, worst) {
+			worst = cacheStatus
+		}
+	}
+
+	// Check SLOG devices
+	if p.Slog != nil {
+		if slogStatus := p.Slog.GetWorstStatus(); isWorse(slogStatus, worst) {
+			worst = slogStatus
+		}
+	}
+
+	return worst
+}
+
+// isWorse returns true if status a is worse than status b
+func isWorse(a, b VDevStatus) bool {
+	if a == VDevStatusFaulted {
+		return true
+	}
+	if a == VDevStatusDegraded && b != VDevStatusFaulted {
+		return true
+	}
+	return false
 }
 
 func GetPools() ([]*Pool, error) {

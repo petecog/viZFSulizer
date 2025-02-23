@@ -2,6 +2,7 @@ package styles
 
 import (
 	"github.com/charmbracelet/lipgloss"
+	"github.com/petecog/vizfsulizer/internal/zfs" // Fix import path
 )
 
 var (
@@ -55,3 +56,20 @@ var (
 	TabInactive = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("8"))
 )
+
+func GetStatusBorderStyle(status zfs.VDevStatus) lipgloss.Style {
+	var color string
+	switch status {
+	case zfs.VDevStatusFaulted:
+		color = "1" // Red
+	case zfs.VDevStatusDegraded:
+		color = "3" // Yellow
+	default:
+		color = "2" // Green
+	}
+
+	return lipgloss.NewStyle().
+		Border(BoxBorder).
+		BorderForeground(lipgloss.Color(color)).
+		Padding(0, 1)
+}
