@@ -1,6 +1,6 @@
 {
     "recommendations": [
-        "ms-azuretools.vscode-docker",
-        "github.vscode-github-actions"
+        "golang.go",
+        "ms-vscode-remote.vscode-remote-extensionpack"
     ]
 }
