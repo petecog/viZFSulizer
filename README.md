@@ -33,7 +33,7 @@ Current features:
    - [ ] Interactive navigation
    - [ ] Display modes for accessibility
      - [ ] RGB color mode (default)
-     - [ ] Black & White mode (--color=bw)
+     - [ ] Black & White mode (--color=bw) [📝](./.todo/color_mode_implementation.md)
        - Normal borders for ONLINE
        - Dashed borders for DEGRADED (╌╌╌╌)
        - Double-line borders for FAULTED (═══)
