@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/petecog/vizfsulizer/internal/tui/styles"
 	"github.com/petecog/vizfsulizer/internal/zfs"
 )
 
@@ -25,19 +26,60 @@ func (pv *PoolView) Render() string {
 	}
 
 	var sb strings.Builder
+	sb.WriteString(styles.Title.Render("ZFS Pools") + "\n\n")
+
 	for _, pool := range pv.pools {
-		sb.WriteString(fmt.Sprintf("Pool: %s [%s]\n", pool.Name, pool.Status))
-		sb.WriteString(renderVDev(pool.RootVDev, 0))
+		poolContent := fmt.Sprintf("Pool: %s [%s]\n%s",
+			styles.PoolName.Render(pool.Name),
+			renderStatus(pool.Status),
+			renderVDev(pool.RootVDev, 0))
+
+		// Add Cache devices if present
+		if pool.Cache != nil {
+			poolContent += renderVDev(pool.Cache, 0)
+		}
+
+		// Add SLOG devices if present
+		if pool.Slog != nil {
+			poolContent += renderVDev(pool.Slog, 0)
+		}
+
+		boxedPool := styles.PoolBox.Render(poolContent)
+		sb.WriteString(boxedPool + "\n\n")
 	}
+
+	// Add help text at the bottom
+	sb.WriteString(styles.HelpText.Render("Press 'q' to quit, arrow keys to navigate"))
 	return sb.String()
 }
 
 func renderVDev(vdev *zfs.VDev, depth int) string {
-	indent := strings.Repeat("  ", depth)
-	result := fmt.Sprintf("%s├─ %s (%s) [%s]\n", indent, vdev.Name, vdev.Type, vdev.Status)
+	content := fmt.Sprintf("%s %s %s [%s]",
+		styles.TreeBranch.Render(strings.Repeat("  ", depth)+"├─"),
+		vdev.Name,
+		styles.VDevType.Render("("+vdev.Type+")"),
+		renderStatus(vdev.Status))
 
-	for _, child := range vdev.Children {
-		result += renderVDev(child, depth+1)
+	if len(vdev.Children) > 0 {
+		childContent := ""
+		for _, child := range vdev.Children {
+			childContent += renderVDev(child, depth+1)
+		}
+		content = styles.VDevBox.Render(content + "\n" + childContent)
 	}
-	return result
+
+	return content + "\n"
+}
+
+func renderStatus(status zfs.VDevStatus) string {
+	switch status {
+	case zfs.VDevStatusOnline:
+		return styles.StatusOnline.Render(string(status))
+	case zfs.VDevStatusDegraded:
+		return styles.StatusDegraded.Render(string(status))
+	case zfs.VDevStatusFaulted:
+		return styles.StatusFaulted.Render(string(status))
+	default:
+		return string(status)
+	}
 }
