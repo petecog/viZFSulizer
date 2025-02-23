@@ -27,7 +27,8 @@
                 "ms-vscode-remote.remote-ssh",
                 "ms-vscode-remote.vscode-remote-extensionpack",
                 "ms-vscode.remote-repositories",
-                "ms-vscode.remote-server"
+                "ms-vscode.remote-server",
+                "mhutchie.git-graph"
             ],
             "settings": {
                 "go.toolsManagement.checkForUpdates": "local",
