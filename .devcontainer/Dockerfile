@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     wget \
     gcc \
     zsh \
+    bash-completion \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Go
@@ -36,6 +37,13 @@ RUN groupadd --gid $USER_GID $USERNAME \
 # Create workspace and Go directories
 RUN mkdir -p /workspace /go/bin /go/src \
     && chown -R $USERNAME:$USERNAME /workspace /go
+
+# Configure bash settings
+RUN echo 'export HISTSIZE=10000' >> /home/$USERNAME/.bashrc \
+    && echo 'export HISTFILESIZE=20000' >> /home/$USERNAME/.bashrc \
+    && echo 'source /etc/bash_completion' >> /home/$USERNAME/.bashrc \
+    && echo 'bind "set show-all-if-ambiguous on"' >> /home/$USERNAME/.bashrc \
+    && echo 'bind "set completion-ignore-case on"' >> /home/$USERNAME/.bashrc
 
 USER $USERNAME
 WORKDIR /workspace
