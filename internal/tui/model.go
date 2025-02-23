@@ -1,43 +1,56 @@
 package tui
 
 import (
-	"fmt"
-
+	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"github.com/petecog/vizfsulizer/internal/tui/views"
+	"github.com/petecog/vizfsulizer/internal/zfs"
 )
 
 type Model struct {
-	currentView string
+	viewport viewport.Model
+	poolView *views.PoolView
+	pools    []*zfs.Pool
 }
 
 func NewModel() Model {
-	fmt.Println("Loading local TUI package...") // Add this line to verify
-	return Model{
-		currentView: "Welcome to viZFSulizer!",
+	m := Model{
+		viewport: viewport.New(0, 0), // Start with zero size, will be updated
+		poolView: views.NewPoolView(),
 	}
+	return m
 }
 
 func (m Model) Init() tea.Cmd {
-	return nil
+	return func() tea.Msg {
+		pools, _ := zfs.GetPools()
+		return pools
+	}
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.viewport.Width = msg.Width
+		m.viewport.Height = msg.Height
+		return m, nil
+
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "q", "ctrl+c":
+		if msg.String() == "q" || msg.String() == "ctrl+c" {
 			return m, tea.Quit
 		}
+
+	case []*zfs.Pool:
+		m.pools = msg
+		m.poolView.Update(msg)
+		m.viewport.SetContent(m.poolView.Render())
 	}
-	return m, nil
+
+	m.viewport, cmd = m.viewport.Update(msg)
+	return m, cmd
 }
 
 func (m Model) View() string {
-	style := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("205")).
-		Bold(true).
-		Padding(1, 2)
-
-	return style.Render(m.currentView) + "\n\nPress 'q' to quit\n"
+	return m.viewport.View()
 }
