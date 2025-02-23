@@ -38,6 +38,11 @@ Current features:
        - Dashed borders for DEGRADED (╌╌╌╌)
        - Double-line borders for FAULTED (═══)
 
+1. Dev mode vs Real mode
+   - [ ] Add provision to use real zfs info
+   - [ ] Add cli switch to activate 'dev mode' which will use articifial data
+   - [ ] Add a simulator to artificial data, which will dynamically change some values on queue or by script.
+
 2. Dataset Properties and Inheritance
    - [ ] Dataset tree visualization
    - [ ] Property display
@@ -51,6 +56,7 @@ Current features:
    - [ ] Snapshot comparison tools
 
 4. Performance Metrics
+   - [ ] Add simulation, making these things move around, for a dynamic view.
    - [ ] IOPS visualization
    - [ ] Bandwidth metrics
    - [ ] Cache hit/miss rates
