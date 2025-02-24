@@ -125,22 +125,27 @@ The project uses a Dev Container that provides:
 
 ### Project Structure
 
-```
+```markdown
 vizfsulizer/
-├── cmd/                         # Executable entry points
-│   └── vizfsulizer/             # Main CLI application
-│       └── main.go              # Just wires everything together
-├── internal/                    # Private application code
-│   ├── tui/                     # Terminal UI implementation
-│   │   ├── model.go             # Core TUI state and logic
-│   │   ├── views/               # Different view components
-│   │   └── styles/              # TUI styling definitions
-│   ├── zfs/                     # ZFS operations
-│   │   ├── pool.go              # Pool operations
-│   │   ├── dataset.go           # Dataset operations
-│   │   └── snapshot.go          # Snapshot operations
-│   └── utils/                   # Shared internal utilities
-└── pkg/                         # (Future) Public API if needed
+├── cmd/                        # Executable entry points
+│   └── vizfsulizer/            # Main CLI application
+│       └── main.go             # Application entry point
+├── internal/                   # Private application code
+│   ├── tui/                    # Terminal UI implementation
+│   │   ├── app.go              # TUI program initialization
+│   │   ├── model.go            # Core TUI state and logic
+│   │   ├── views/              # Different view components
+│   │   │   └── pool_view.go    # Pool visualization component
+│   │   └── styles/             # TUI styling definitions
+│   │       ├── styles.go       # Base component styles
+│   │       └── theme.go        # Theme and color definitions
+│   ├── zfs/                    # ZFS operations
+│   │   ├── pool.go             # Pool operations and mock data
+│   │   ├── types.go            # Core ZFS type definitions
+│   │   └── status/             # Status analysis
+│   │       └── analyzer.go     # Health status analyzer
+│   └── utils/                  # Shared internal utilities
+└── pkg/                        # (Future) Public API if needed
 ```
 
 The project follows standard Go layout conventions:
@@ -151,8 +156,12 @@ The project follows standard Go layout conventions:
 - `internal/`: Contains private implementation code that cannot be imported by other projects.
   This is where most of our business logic lives.
   - `tui/`: Terminal UI implementation using Bubble Tea
+    - `views/`: Individual view components
+    - `styles/`: UI styling and theming
   - `zfs/`: Core ZFS operations and data structures
+    - `status/`: Health status analysis tools
   - `utils/`: Shared utilities used across the application
+```
 
 ## Testing
 
