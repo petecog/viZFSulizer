@@ -3,3 +3,7 @@ pkg/
 *.test
 *.out
 .DS_Store
+
+# Local Dev stuff
+.local_dev_stuff/*
+!.local_dev_stuff/.gitkeep

@@ -11,7 +11,10 @@
     ],
     "customizations": {
         "vscode": {
-            "extensions": [],
+            "extensions": [
+                "golang.go",
+                "mhutchie.git-graph"
+            ],
             "settings": {
                 "go.toolsManagement.checkForUpdates": "local",
                 "go.useLanguageServer": true,
@@ -34,6 +37,6 @@
         "source=${localWorkspaceFolder},target=/workspace,type=bind",
         "source=go-tools,target=/go,type=volume"
     ],
-    "postCreateCommand": "sudo mkdir -p /go/{bin,pkg,src} && sudo chown -R vscode:vscode /go",
+    "postCreateCommand": "sudo mkdir -p /go/{bin,pkg,src} && sudo chown -R vscode:vscode /go && cp /workspace/.devcontainer/shell/.bashrc ~/.bashrc && chmod 600 /workspace/.local_dev_stuff/.bash_history",
     "workspaceFolder": "/workspace"
 }
