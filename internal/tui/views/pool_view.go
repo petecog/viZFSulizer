@@ -155,7 +155,7 @@ func (pv *PoolView) NavigateVDevs(direction int) {
 // getNavigableVDevs returns a flat list of all VDEVs in the current pool
 func (pv *PoolView) getNavigableVDevs() []*zfs.VDev {
 	var vdevs []*zfs.VDev
-	if pv.pools == nil || len(pv.pools) == 0 {
+	if len(pv.pools) == 0 {
 		return vdevs
 	}
 

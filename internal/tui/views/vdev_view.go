@@ -27,38 +27,48 @@ func NewVDevView(pool *zfs.Pool) *VDevView {
 // RenderVDev creates a formatted view of a VDev and its children
 func (v *VDevView) RenderVDev(vdev *zfs.VDev, depth int) string {
 	worstStatus := v.pool.GetWorstStatus()
+	var content strings.Builder
 
 	// Basic VDev info with tree structure
-	header := fmt.Sprintf("%s %s %s [%s]",
+	content.WriteString(fmt.Sprintf("%s %s %s [%s]",
 		styles.TreeBranch.Render(strings.Repeat("  ", depth)+"├─"),
 		vdev.Name,
 		styles.VDevType.Render("("+string(vdev.Type)+")"),
-		renderStatus(worstStatus))
+		renderStatus(worstStatus)))
 
 	// Add capacity info if available
 	if vdev.TotalCapacity > 0 {
-		header += fmt.Sprintf("\nCapacity: %d/%d GB",
+		content.WriteString(fmt.Sprintf("\nCapacity: %d/%d GB",
 			vdev.UsedCapacity/1024/1024/1024,
-			vdev.TotalCapacity/1024/1024/1024)
+			vdev.TotalCapacity/1024/1024/1024))
 	}
 
 	// Render disk information if any
 	if len(vdev.Disks) > 0 {
-		header += "\n" + v.renderDisks(vdev.Disks)
+		content.WriteString("\n" + v.renderDisks(vdev.Disks))
 	}
 
-	// Recursively render children
+	// Get children content before applying border
+	var childrenContent string
 	if len(vdev.Children) > 0 {
-		childContent := ""
+		var childBuilder strings.Builder
 		for _, child := range vdev.Children {
-			childBox := styles.VDevBox.Render(v.RenderVDev(child, depth+1))
-			childContent += "\n" + childBox
+			// Each child gets its own border
+			childBox := v.RenderVDev(child, depth+1)
+			childBuilder.WriteString("\n" + childBox)
 		}
-		header += "\n" + childContent
+		childrenContent = childBuilder.String()
 	}
 
-	// Apply status-based styling
-	return styles.GetStatusBorderStyle(worstStatus).Render(header) + "\n"
+	// Apply border to current VDev content
+	boxed := styles.GetStatusBorderStyle(worstStatus).Render(content.String())
+
+	// Add children after current VDev's border
+	if childrenContent != "" {
+		boxed += childrenContent
+	}
+
+	return boxed
 }
 
 // Render generates the complete VDev hierarchy view
