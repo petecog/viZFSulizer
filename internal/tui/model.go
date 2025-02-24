@@ -7,13 +7,21 @@ import (
 	"github.com/petecog/vizfsulizer/internal/zfs"
 )
 
+// Model represents the main application state and handles the core UI logic.
+// It manages the viewport, pool view, and pool selection state.
 type Model struct {
-	viewport viewport.Model
-	poolView *views.PoolView
-	pools    []*zfs.Pool
-	selected int // Currently selected pool index
+	viewport viewport.Model  // Manages scrollable view area
+	poolView *views.PoolView // Handles pool visualization
+	pools    []*zfs.Pool     // List of ZFS pools to display
+	selected int             // Currently selected pool index
 }
 
+// NewModel creates and initializes a new Model with default values.
+// It sets up the viewport with zero initial size (will be updated later)
+// and creates a new PoolView instance.
+//
+// Returns:
+//   - Model: A new Model instance ready for use
 func NewModel() Model {
 	m := Model{
 		viewport: viewport.New(0, 0), // Start with zero size, will be updated
@@ -23,6 +31,11 @@ func NewModel() Model {
 	return m
 }
 
+// Init implements tea.Model and returns the initial command to fetch pool data.
+// This is called once when the program starts.
+//
+// Returns:
+//   - tea.Cmd: Command to fetch initial pool data
 func (m Model) Init() tea.Cmd {
 	return func() tea.Msg {
 		pools, _ := zfs.GetPools()
@@ -30,6 +43,18 @@ func (m Model) Init() tea.Cmd {
 	}
 }
 
+// Update implements tea.Model and handles all state updates.
+// It processes different types of messages:
+//   - WindowSizeMsg: Updates viewport dimensions
+//   - KeyMsg: Handles keyboard input for navigation and quitting
+//   - []*zfs.Pool: Updates pool data and view
+//
+// Parameters:
+//   - msg: The message to process
+//
+// Returns:
+//   - tea.Model: Updated model
+//   - tea.Cmd: Any command to execute
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg := msg.(type) {
@@ -67,6 +92,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
+// View implements tea.Model and returns the string to be displayed.
+// It delegates to the viewport's View method to handle scrolling
+// and content display.
+//
+// Returns:
+//   - string: The complete rendered view
 func (m Model) View() string {
 	return m.viewport.View()
 }
