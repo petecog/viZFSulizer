@@ -14,8 +14,15 @@ RUN apt-get update && apt-get install -y \
     jq \
     ripgrep \
     zfsutils-linux \
+    ca-certificates \
+    gnupg \
+    lsb-release \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js 20.x
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs
 
 # Install Go
 RUN wget https://go.dev/dl/go1.21.6.linux-amd64.tar.gz \
@@ -30,6 +37,11 @@ RUN go install golang.org/x/tools/gopls@latest \
     && go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest \
     && go install github.com/go-delve/delve/cmd/dlv@latest
 
+# Install Claude Code CLI with specific npm configuration
+RUN npm config set fund false \
+    && npm config set audit false \
+    && npm install -g @anthropic-ai/claude-code@latest
+
 # Create the user
 ARG USERNAME=vscode
 ARG USER_UID=1000
@@ -43,6 +55,10 @@ RUN groupadd --gid $USER_GID $USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# Create .local_dev_stuff directory for persistent history
+RUN mkdir -p /home/$USERNAME/.local_dev_stuff \
+    && chown -R $USERNAME:$USERNAME /home/$USERNAME/.local_dev_stuff
 
 # Create Go workspace directory and set permissions
 RUN mkdir -p /go/src /go/bin \
