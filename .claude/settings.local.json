@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go get:*)",
+      "Bash(cat:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(mkdir:*)",
+      "Bash(touch:*)",
+      "Bash(grep:*)"
+    ],
+    "deny": []
+  },
+  "enableAllProjectMcpServers": false
+}
