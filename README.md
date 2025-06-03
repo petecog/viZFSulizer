@@ -1,5 +1,9 @@
 # viZFSulizer
 
+[![Go Version](https://img.shields.io/github/go-mod/go-version/petecog/vizfsulizer)](https://go.dev/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/petecog/vizfsulizer/build.yml?branch=main)](https://github.com/petecog/vizfsulizer/actions)
+
 A terminal-based ZFS configuration visualization tool written in Go, providing an interactive way to explore and understand your ZFS setup.
 
 ## Why?
@@ -27,10 +31,38 @@ Current features:
 
 1. Pool Structure and Hierarchy
    - [x] Basic TUI framework setup
-   - [ ] Physical pool structure visualization
-   - [ ] Device status indicators
+   - [x] Physical pool structure visualization
+   - [x] Device status indicators
    - [ ] VDEV configuration display
+     - [ ] Show VDEV types (mirror, raidz1/2/3, spare, cache, log)
+     - [ ] Display individual disk properties (size, model, serial)
+     - [ ] Show read/write load distribution
+     - [ ] Indicate hot spares and their status
+     - [ ] Display redundancy levels
+     - [ ] Show capacity usage per VDEV
+     - [ ] Indicate resilvering progress when active
    - [ ] Interactive navigation
+
+1. - [ ] Change the way that dev examples/tests are provisioned - simple text files
+      - [ ] Create a yaml schema
+      - [ ] Load examples from yaml files
+
+1. Display / accessibilty
+   - [ ] Display modes for accessibility
+     - [ ] RGB color mode (default)
+     - [ ] Black & White mode (--color=bw) [📝](./.todo/color_mode_implementation.md)
+       - Normal borders for ONLINE
+       - Dashed borders for DEGRADED (╌╌╌╌)
+       - Double-line borders for FAULTED (═══)
+
+1. Testing
+   - [ ] Add tests
+   - [ ] Add github actions / workflows (or whatever they are called to do tests)
+
+1. Dev mode vs Real mode
+   - [ ] Add provision to use real zfs info
+   - [ ] Add cli switch to activate 'dev mode' which will use articifial data
+   - [ ] Add a simulator to artificial data, which will dynamically change some values on queue or by script.
 
 2. Dataset Properties and Inheritance
    - [ ] Dataset tree visualization
@@ -45,6 +77,7 @@ Current features:
    - [ ] Snapshot comparison tools
 
 4. Performance Metrics
+   - [ ] Add simulation, making these things move around, for a dynamic view.
    - [ ] IOPS visualization
    - [ ] Bandwidth metrics
    - [ ] Cache hit/miss rates
@@ -69,7 +102,7 @@ Current features:
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/vizfsulizer.git
+git clone https://github.com/petecog/vizfsulizer.git
 cd vizfsulizer
 ```
 
@@ -92,18 +125,42 @@ The project uses a Dev Container that provides:
 
 ### Project Structure
 
-```
+```markdown
 vizfsulizer/
-├── cmd/
-│   └── vizfsulizer/              # Main application entry point
-├── internal/
-│   ├── tui/                      # TUI components
-│   │   ├── views/                # Different view components
-│   │   └── styles/               # TUI styling definitions
-│   ├── zfs/                      # ZFS interaction layer
-│   └── utils/                    # Shared utilities
-├── pkg/                          # Public library code
-└── test/                         # Additional test files
+├── cmd/                        # Executable entry points
+│   └── vizfsulizer/            # Main CLI application
+│       └── main.go             # Application entry point
+├── internal/                   # Private application code
+│   ├── tui/                    # Terminal UI implementation
+│   │   ├── app.go              # TUI program initialization
+│   │   ├── model.go            # Core TUI state and logic
+│   │   ├── views/              # Different view components
+│   │   │   └── pool_view.go    # Pool visualization component
+│   │   └── styles/             # TUI styling definitions
+│   │       ├── styles.go       # Base component styles
+│   │       └── theme.go        # Theme and color definitions
+│   ├── zfs/                    # ZFS operations
+│   │   ├── pool.go             # Pool operations and mock data
+│   │   ├── types.go            # Core ZFS type definitions
+│   │   └── status/             # Status analysis
+│   │       └── analyzer.go     # Health status analyzer
+│   └── utils/                  # Shared internal utilities
+└── pkg/                        # (Future) Public API if needed
+```
+
+The project follows standard Go layout conventions:
+
+- `cmd/`: Contains the executable entry points. Each subdirectory is a separate program.
+  Keep these minimal - they should only wire together code from other packages.
+
+- `internal/`: Contains private implementation code that cannot be imported by other projects.
+  This is where most of our business logic lives.
+  - `tui/`: Terminal UI implementation using Bubble Tea
+    - `views/`: Individual view components
+    - `styles/`: UI styling and theming
+  - `zfs/`: Core ZFS operations and data structures
+    - `status/`: Health status analysis tools
+  - `utils/`: Shared utilities used across the application
 ```
 
 ## Testing
@@ -135,10 +192,10 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-[Your chosen license]
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
 
 ## Acknowledgments
 
 - [Bubble Tea](https://github.com/charmbracelet/bubbletea) - TUI Framework
 - [OpenZFS](https://openzfs.org/wiki/Main_Page) - ZFS implementation
-- [Claude](https://www.anthropic.com/claude) - Assisted with initial project setup, architecture design, and development planning *Ed:I asked Claude to provide this statement, but it's being modest - it did 99% of the work. I just came up with the idea, and talked with C for a while.*
+- [Claude](https://www.anthropic.com/claude) - Assisted with initial project setup, architecture design, and development planning *Ed:I asked Claude to provide this statement, but it's being modest - it did 99% of the work. I just came up with the idea, and talked with Coplot ~~~for a while~~~ a lot.*
