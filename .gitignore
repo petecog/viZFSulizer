@@ -7,3 +7,7 @@ pkg/
 # Environment variables
 .env
 .claude/input/*
+
+# Local development files (keep directory structure)
+.local_dev_stuff/*
+!.local_dev_stuff/.gitkeep
