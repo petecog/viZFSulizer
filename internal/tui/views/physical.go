@@ -1,11 +1,19 @@
 package views
 
 import (
+	"fmt"
 	"github.com/rivo/tview"
+	"github.com/yourusername/vizfsulizer/internal/zfs"
 )
 
 // PhysicalView creates the physical view showing vdev layout and disk health
 func NewPhysicalView() *tview.Flex {
+	// Initialize ZFS simulator
+	sim := zfs.NewSimulator()
+	if err := sim.LoadDefaultConfig(); err != nil {
+		// Fallback to hardcoded data if config fails
+		return newPhysicalViewFallback()
+	}
 	// Tree view for physical topology
 	tree := tview.NewTreeView().
 		SetRoot(tview.NewTreeNode("Physical Layout").SetColor(tview.Styles.PrimaryTextColor)).
@@ -33,32 +41,34 @@ func NewPhysicalView() *tview.Flex {
 		SetDynamicColors(true).
 		SetText("[yellow]Physical View[white]\nUse arrow keys to navigate the topology.")
 
-	// Sample physical topology
-	poolNode := tview.NewTreeNode("tank").
-		SetColor(tview.Styles.SecondaryTextColor)
-	tree.GetRoot().AddChild(poolNode)
+	// Load pools from simulator
+	pools := sim.GetPools()
+	for _, pool := range pools {
+		poolNode := tview.NewTreeNode(pool.Name).
+			SetColor(tview.Styles.SecondaryTextColor).
+			SetReference(&pool)
+		tree.GetRoot().AddChild(poolNode)
 
-	// RAIDZ vdev
-	raidzNode := tview.NewTreeNode("raidz2-0").
-		SetColor(tview.Styles.TertiaryTextColor)
-	poolNode.AddChild(raidzNode)
+		// Add vdevs
+		for _, vdev := range pool.VDevs {
+			vdevNode := tview.NewTreeNode(vdev.Name).
+				SetColor(tview.Styles.TertiaryTextColor).
+				SetReference(&vdev)
+			poolNode.AddChild(vdevNode)
 
-	// Physical disks
-	disks := []string{"sda", "sdb", "sdc", "sdd"}
-	for _, disk := range disks {
-		diskNode := tview.NewTreeNode(disk + " [green](ONLINE)[white]").
-			SetColor(tview.Styles.TertiaryTextColor)
-		raidzNode.AddChild(diskNode)
+			// Add devices
+			for _, device := range vdev.Devices {
+				statusColor := "[green]"
+				if device.Status != "ONLINE" {
+					statusColor = "[red]"
+				}
+				deviceNode := tview.NewTreeNode(fmt.Sprintf("%s %s(%s)[white]", device.Name, statusColor, device.Status)).
+					SetColor(tview.Styles.TertiaryTextColor).
+					SetReference(&device)
+				vdevNode.AddChild(deviceNode)
+			}
+		}
 	}
-
-	// Cache and log devices
-	cacheNode := tview.NewTreeNode("cache").
-		SetColor(tview.Styles.TertiaryTextColor)
-	poolNode.AddChild(cacheNode)
-
-	cacheDisk := tview.NewTreeNode("nvme0n1 [green](ONLINE)[white]").
-		SetColor(tview.Styles.TertiaryTextColor)
-	cacheNode.AddChild(cacheDisk)
 
 	// Handle selection
 	tree.SetSelectedFunc(func(node *tview.TreeNode) {
@@ -69,41 +79,44 @@ func NewPhysicalView() *tview.Flex {
 			table.RemoveRow(row)
 		}
 		
-		// Sample data based on selection
+		// Get data based on node reference
 		var properties [][]string
-		if text == "tank" {
+		ref := node.GetReference()
+		
+		switch v := ref.(type) {
+		case *zfs.Pool:
 			properties = [][]string{
-				{"Pool", "tank"},
-				{"Status", "ONLINE"},
-				{"Total Capacity", "4TB"},
-				{"VDevs", "1 raidz2, 1 cache"},
-				{"Resilver", "None in progress"},
-				{"Scrub", "Last: 2025-01-01"},
+				{"Pool", v.Name},
+				{"Status", v.Status},
+				{"Health", v.Health},
+				{"Total Capacity", v.Size},
+				{"Allocated", v.Allocated},
+				{"Free", v.Free},
+				{"VDevs", fmt.Sprintf("%d", len(v.VDevs))},
+				{"Last Scrub", v.LastScrub},
 			}
-		} else if text == "raidz2-0" {
+		case *zfs.VDev:
 			properties = [][]string{
-				{"VDev", "raidz2-0"},
-				{"Type", "RAIDZ2"},
-				{"Status", "ONLINE"},
-				{"Devices", "4"},
-				{"Capacity", "4TB"},
-				{"Parity", "2 devices"},
-				{"Resilver", "None"},
+				{"VDev", v.Name},
+				{"Type", v.Type},
+				{"Status", v.Status},
+				{"Devices", fmt.Sprintf("%d", len(v.Devices))},
 			}
-		} else if text == "sda [green](ONLINE)[white]" {
+		case *zfs.Device:
 			properties = [][]string{
-				{"Device", "sda"},
-				{"Status", "ONLINE"},
-				{"Capacity", "1TB"},
-				{"Read Errors", "0"},
-				{"Write Errors", "0"},
-				{"Checksum Errors", "0"},
-				{"Temperature", "35°C"},
-				{"Model", "WD Red 1TB"},
+				{"Device", v.Name},
+				{"Status", v.Status},
+				{"Capacity", v.Capacity},
+				{"Model", v.Model},
+				{"Serial", v.Serial},
+				{"Temperature", fmt.Sprintf("%d°C", v.Temperature)},
+				{"Read Errors", fmt.Sprintf("%d", v.ReadErrors)},
+				{"Write Errors", fmt.Sprintf("%d", v.WriteErrors)},
+				{"Checksum Errors", fmt.Sprintf("%d", v.ChecksumErrors)},
 			}
-		} else {
+		default:
 			properties = [][]string{
-				{"Device", text},
+				{"Name", text},
 				{"Status", "Select for details"},
 			}
 		}
@@ -127,5 +140,16 @@ func NewPhysicalView() *tview.Flex {
 		AddItem(tree, 0, 2, true).
 		AddItem(rightPanel, 0, 3, false)
 
+	return flex
+}
+
+// newPhysicalViewFallback creates a fallback view with hardcoded data
+func newPhysicalViewFallback() *tview.Flex {
+	// Simple fallback implementation
+	text := tview.NewTextView().
+		SetDynamicColors(true).
+		SetText("[red]Error loading ZFS config[white]\n\nFallback mode with sample data.\nCheck that config/zfs-config.yaml exists.")
+	
+	flex := tview.NewFlex().AddItem(text, 0, 1, true)
 	return flex
 }

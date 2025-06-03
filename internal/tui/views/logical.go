@@ -1,11 +1,19 @@
 package views
 
 import (
+	"fmt"
 	"github.com/rivo/tview"
+	"github.com/yourusername/vizfsulizer/internal/zfs"
 )
 
 // LogicalView creates the logical view showing pools and datasets hierarchy
 func NewLogicalView() *tview.Flex {
+	// Initialize ZFS simulator
+	sim := zfs.NewSimulator()
+	if err := sim.LoadDefaultConfig(); err != nil {
+		// Fallback to hardcoded data if config fails
+		return newLogicalViewFallback()
+	}
 	// Tree view for ZFS hierarchy
 	tree := tview.NewTreeView().
 		SetRoot(tview.NewTreeNode("ZFS Pools").SetColor(tview.Styles.PrimaryTextColor)).
@@ -33,18 +41,30 @@ func NewLogicalView() *tview.Flex {
 		SetDynamicColors(true).
 		SetText("[yellow]Logical View[white]\nUse arrow keys to navigate the tree.")
 
-	// Sample data
-	poolNode := tview.NewTreeNode("tank").
-		SetColor(tview.Styles.SecondaryTextColor)
-	tree.GetRoot().AddChild(poolNode)
+	// Load pools from simulator
+	pools := sim.GetPools()
+	for _, pool := range pools {
+		poolNode := tview.NewTreeNode(pool.Name).
+			SetColor(tview.Styles.SecondaryTextColor).
+			SetReference(&pool)
+		tree.GetRoot().AddChild(poolNode)
 
-	datasetNode := tview.NewTreeNode("tank/data").
-		SetColor(tview.Styles.TertiaryTextColor)
-	poolNode.AddChild(datasetNode)
+		// Add datasets
+		for _, dataset := range pool.Datasets {
+			datasetNode := tview.NewTreeNode(dataset.Name).
+				SetColor(tview.Styles.TertiaryTextColor).
+				SetReference(&dataset)
+			poolNode.AddChild(datasetNode)
 
-	snapshotNode := tview.NewTreeNode("tank/data@snapshot1").
-		SetColor(tview.Styles.TertiaryTextColor)
-	datasetNode.AddChild(snapshotNode)
+			// Add snapshots
+			for _, snapshot := range dataset.Snapshots {
+				snapshotNode := tview.NewTreeNode(snapshot.Name).
+					SetColor(tview.Styles.TertiaryTextColor).
+					SetReference(&snapshot)
+				datasetNode.AddChild(snapshotNode)
+			}
+		}
+	}
 
 	// Handle selection
 	tree.SetSelectedFunc(func(node *tview.TreeNode) {
@@ -55,30 +75,42 @@ func NewLogicalView() *tview.Flex {
 			table.RemoveRow(row)
 		}
 		
-		// Sample data based on selection
+		// Get data based on node reference
 		var properties [][]string
-		if text == "tank" {
+		ref := node.GetReference()
+		
+		switch v := ref.(type) {
+		case *zfs.Pool:
 			properties = [][]string{
-				{"Name", "tank"},
-				{"Status", "ONLINE"},
-				{"Size", "1.2TB"},
-				{"Used", "800GB (67%)"},
-				{"Available", "400GB"},
-				{"Health", "Healthy"},
-				{"Dedup", "1.00x"},
-				{"Compression", "lz4"},
+				{"Name", v.Name},
+				{"Status", v.Status},
+				{"Health", v.Health},
+				{"Size", v.Size},
+				{"Allocated", v.Allocated},
+				{"Free", v.Free},
+				{"Dedup", v.Dedup},
+				{"Last Scrub", v.LastScrub},
 			}
-		} else if text == "tank/data" {
+		case *zfs.Dataset:
 			properties = [][]string{
-				{"Name", "tank/data"},
-				{"Type", "Dataset"},
-				{"Used", "600GB"},
-				{"Available", "600GB"},
-				{"Compression", "lz4"},
-				{"Snapshots", "3"},
-				{"Mountpoint", "/tank/data"},
+				{"Name", v.Name},
+				{"Type", v.Type},
+				{"Mountpoint", v.Mountpoint},
+				{"Used", v.Used},
+				{"Available", v.Available},
+				{"Compression", v.Compression},
+				{"Dedup", v.Dedup},
+				{"Snapshots", fmt.Sprintf("%d", len(v.Snapshots))},
 			}
-		} else {
+		case *zfs.Snapshot:
+			properties = [][]string{
+				{"Name", v.Name},
+				{"Type", "Snapshot"},
+				{"Creation", v.Creation},
+				{"Used", v.Used},
+				{"Referenced", v.Referenced},
+			}
+		default:
 			properties = [][]string{
 				{"Name", text},
 				{"Type", "Unknown"},
@@ -105,5 +137,16 @@ func NewLogicalView() *tview.Flex {
 		AddItem(tree, 0, 2, true).
 		AddItem(rightPanel, 0, 3, false)
 
+	return flex
+}
+
+// newLogicalViewFallback creates a fallback view with hardcoded data
+func newLogicalViewFallback() *tview.Flex {
+	// Simple fallback implementation
+	text := tview.NewTextView().
+		SetDynamicColors(true).
+		SetText("[red]Error loading ZFS config[white]\n\nFallback mode with sample data.\nCheck that config/zfs-config.yaml exists.")
+	
+	flex := tview.NewFlex().AddItem(text, 0, 1, true)
 	return flex
 }
