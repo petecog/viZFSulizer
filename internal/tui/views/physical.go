@@ -19,27 +19,10 @@ func NewPhysicalView() *tview.Flex {
 		SetRoot(tview.NewTreeNode("Physical Layout").SetColor(tview.Styles.PrimaryTextColor)).
 		SetCurrentNode(tview.NewTreeNode("Physical Layout"))
 
-	// Details panel with table
-	table := tview.NewTable().
-		SetBorders(true).
-		SetSelectable(true, false)
-	
-	// Set up table headers
-	headers := []string{"Property", "Value"}
-	for col, header := range headers {
-		table.SetCell(0, col, tview.NewTableCell(header).
-			SetTextColor(tview.Styles.SecondaryTextColor).
-			SetAlign(tview.AlignCenter).
-			SetSelectable(false))
-	}
-	
-	// Default content
-	table.SetCell(1, 0, tview.NewTableCell("Status").SetSelectable(false))
-	table.SetCell(1, 1, tview.NewTableCell("Select a vdev or disk"))
-	
+	// Details panel
 	details := tview.NewTextView().
 		SetDynamicColors(true).
-		SetText("[yellow]Physical View[white]\nUse arrow keys to navigate the topology.")
+		SetText("[yellow]Physical View[white]\nUse arrow keys to navigate the topology.\n\nSelect a pool, vdev, or device to view properties.")
 
 	// Load pools from simulator
 	pools := sim.GetPools()
@@ -73,72 +56,52 @@ func NewPhysicalView() *tview.Flex {
 	// Handle selection
 	tree.SetSelectedFunc(func(node *tview.TreeNode) {
 		text := node.GetText()
-		
-		// Clear table and add data
-		for row := 1; row < table.GetRowCount(); row++ {
-			table.RemoveRow(row)
-		}
-		
-		// Get data based on node reference
-		var properties [][]string
 		ref := node.GetReference()
 		
+		var content string
 		switch v := ref.(type) {
 		case *zfs.Pool:
-			properties = [][]string{
-				{"Pool", v.Name},
-				{"Status", v.Status},
-				{"Health", v.Health},
-				{"Total Capacity", v.Size},
-				{"Allocated", v.Allocated},
-				{"Free", v.Free},
-				{"VDevs", fmt.Sprintf("%d", len(v.VDevs))},
-				{"Last Scrub", v.LastScrub},
-			}
+			content = fmt.Sprintf("[green]Selected: [white]%s\n\n"+
+				"Pool           %s\n"+
+				"Status         %s\n"+
+				"Health         %s\n"+
+				"Capacity       %s\n"+
+				"Allocated      %s\n"+
+				"Free           %s\n"+
+				"VDevs          %d\n"+
+				"Last Scrub     %s",
+				text, v.Name, v.Status, v.Health, v.Size, v.Allocated, v.Free, len(v.VDevs), v.LastScrub)
 		case *zfs.VDev:
-			properties = [][]string{
-				{"VDev", v.Name},
-				{"Type", v.Type},
-				{"Status", v.Status},
-				{"Devices", fmt.Sprintf("%d", len(v.Devices))},
-			}
+			content = fmt.Sprintf("[green]Selected: [white]%s\n\n"+
+				"VDev           %s\n"+
+				"Type           %s\n"+
+				"Status         %s\n"+
+				"Devices        %d",
+				text, v.Name, v.Type, v.Status, len(v.Devices))
 		case *zfs.Device:
-			properties = [][]string{
-				{"Device", v.Name},
-				{"Status", v.Status},
-				{"Capacity", v.Capacity},
-				{"Model", v.Model},
-				{"Serial", v.Serial},
-				{"Temperature", fmt.Sprintf("%d°C", v.Temperature)},
-				{"Read Errors", fmt.Sprintf("%d", v.ReadErrors)},
-				{"Write Errors", fmt.Sprintf("%d", v.WriteErrors)},
-				{"Checksum Errors", fmt.Sprintf("%d", v.ChecksumErrors)},
-			}
+			content = fmt.Sprintf("[green]Selected: [white]%s\n\n"+
+				"Device         %s\n"+
+				"Status         %s\n"+
+				"Capacity       %s\n"+
+				"Model          %s\n"+
+				"Serial         %s\n"+
+				"Temperature    %d°C\n"+
+				"Read Errors    %d\n"+
+				"Write Errors   %d\n"+
+				"Chksum Errors  %d",
+				text, v.Name, v.Status, v.Capacity, v.Model, v.Serial, v.Temperature, v.ReadErrors, v.WriteErrors, v.ChecksumErrors)
 		default:
-			properties = [][]string{
-				{"Name", text},
-				{"Status", "Select for details"},
-			}
+			content = fmt.Sprintf("[green]Selected: [white]%s\n\n"+
+				"Status         Select for details", text)
 		}
 		
-		for i, prop := range properties {
-			table.SetCell(i+1, 0, tview.NewTableCell(prop[0]).SetSelectable(false))
-			table.SetCell(i+1, 1, tview.NewTableCell(prop[1]))
-		}
-		
-		details.SetText("[green]Selected: [white]" + text + "\n[yellow]Use arrow keys to navigate.")
+		details.SetText(content)
 	})
-
-	// Right panel with details text on top, table below
-	rightPanel := tview.NewFlex().
-		SetDirection(tview.FlexRow).
-		AddItem(details, 3, 0, false).
-		AddItem(table, 0, 1, false)
 
 	// Split layout
 	flex := tview.NewFlex().
 		AddItem(tree, 0, 2, true).
-		AddItem(rightPanel, 0, 3, false)
+		AddItem(details, 0, 3, false)
 
 	return flex
 }
