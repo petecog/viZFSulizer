@@ -1,0 +1,152 @@
+# ZFS Simulator Configuration
+# Easy configuration for testing different ZFS topologies and states
+
+pools:
+  - name: "tank"
+    status: "ONLINE"
+    health: "Healthy"
+    size: "4TB"
+    allocated: "2.8TB"
+    free: "1.2TB"
+    dedup: "1.00x"
+    last_scrub: "2025-01-01"
+    
+    vdevs:
+      - name: "raidz2-0"
+        type: "raidz2"
+        status: "ONLINE"
+        devices:
+          - name: "sda"
+            status: "ONLINE"
+            capacity: "1TB"
+            model: "WD Red 1TB"
+            serial: "WD-12345"
+            temperature: 35
+            read_errors: 0
+            write_errors: 0
+            checksum_errors: 0
+            
+          - name: "sdb"
+            status: "ONLINE"
+            capacity: "1TB"
+            model: "WD Red 1TB"
+            serial: "WD-12346"
+            temperature: 38
+            read_errors: 0
+            write_errors: 0
+            checksum_errors: 0
+            
+          - name: "sdc"
+            status: "ONLINE"
+            capacity: "1TB"
+            model: "WD Red 1TB"
+            serial: "WD-12347"
+            temperature: 36
+            read_errors: 0
+            write_errors: 0
+            checksum_errors: 0
+            
+          - name: "sdd"
+            status: "DEGRADED"
+            capacity: "1TB"
+            model: "WD Red 1TB"
+            serial: "WD-12348"
+            temperature: 45
+            read_errors: 5
+            write_errors: 0
+            checksum_errors: 2
+            
+      - name: "cache"
+        type: "cache"
+        status: "ONLINE"
+        devices:
+          - name: "nvme0n1"
+            status: "ONLINE"
+            capacity: "500GB"
+            model: "Samsung 980 Pro"
+            serial: "SAMSUNG-98765"
+            temperature: 42
+            read_errors: 0
+            write_errors: 0
+            checksum_errors: 0
+    
+    datasets:
+      - name: "tank"
+        type: "filesystem"
+        mountpoint: "/tank"
+        used: "1.2TB"
+        available: "2.8TB"
+        compression: "lz4"
+        dedup: "off"
+        snapshots: []
+        
+      - name: "tank/data"
+        type: "filesystem"
+        mountpoint: "/tank/data"
+        used: "800GB"
+        available: "3.2TB"
+        compression: "lz4"
+        dedup: "off"
+        snapshots:
+          - name: "tank/data@backup-2025-01-01"
+            creation: "2025-01-01"
+            used: "50GB"
+            referenced: "800GB"
+            
+          - name: "tank/data@backup-2024-12-01"
+            creation: "2024-12-01"
+            used: "45GB"
+            referenced: "750GB"
+            
+      - name: "tank/media"
+        type: "filesystem"
+        mountpoint: "/tank/media"
+        used: "1.6TB"
+        available: "2.4TB"
+        compression: "lz4"
+        dedup: "off"
+        snapshots: []
+
+  - name: "backup"
+    status: "ONLINE"
+    health: "Healthy"
+    size: "2TB"
+    allocated: "500GB"
+    free: "1.5TB"
+    dedup: "2.1x"
+    last_scrub: "2024-12-15"
+    
+    vdevs:
+      - name: "mirror-0"
+        type: "mirror"
+        status: "ONLINE"
+        devices:
+          - name: "sde"
+            status: "ONLINE"
+            capacity: "1TB"
+            model: "Seagate Backup"
+            serial: "SG-99999"
+            temperature: 32
+            read_errors: 0
+            write_errors: 0
+            checksum_errors: 0
+            
+          - name: "sdf"
+            status: "ONLINE"
+            capacity: "1TB"
+            model: "Seagate Backup"
+            serial: "SG-99998"
+            temperature: 34
+            read_errors: 0
+            write_errors: 0
+            checksum_errors: 0
+    
+    datasets:
+      - name: "backup"
+        type: "filesystem"
+        mountpoint: "/backup"
+        used: "500GB"
+        available: "1.5TB"
+        compression: "gzip"
+        dedup: "on"
+        snapshots: []
