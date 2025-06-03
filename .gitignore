@@ -3,3 +3,7 @@ pkg/
 *.test
 *.out
 .DS_Store
+
+# Environment variables
+.env
+.claude/input/*
