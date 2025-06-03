@@ -1,8 +1,18 @@
 # Add bash-specific customizations here
 export PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+
+# Persistent history in .local_dev_stuff
+export HISTFILE=~/.local_dev_stuff/.bash_history
 export HISTSIZE=10000
 export HISTFILESIZE=20000
 export HISTCONTROL=ignoreboth
+
+# Append to history file, don't overwrite
+shopt -s histappend
+
+# Create history file if it doesn't exist
+mkdir -p ~/.local_dev_stuff
+touch ~/.local_dev_stuff/.bash_history
 
 # Enable bash completion
 if [ -f /etc/bash_completion ]; then
