@@ -1,40 +1,58 @@
 package tui
 
 import (
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"github.com/yourusername/vizfsulizer/internal/tui/views"
 )
 
 func Start() error {
 	app := tview.NewApplication()
 
-	// Create main layout with tree on left, details on right
-	tree := tview.NewTreeView().
-		SetRoot(tview.NewTreeNode("ZFS Pools").SetColor(tview.Styles.PrimaryTextColor)).
-		SetCurrentNode(tview.NewTreeNode("ZFS Pools"))
+	// Create tabbed pages
+	pages := tview.NewPages()
+	
+	// Add logical and physical views
+	logicalView := views.NewLogicalView()
+	physicalView := views.NewPhysicalView()
+	
+	pages.AddPage("Logical", logicalView, true, true)
+	pages.AddPage("Physical", physicalView, true, false)
 
-	details := tview.NewTextView().
+	// Create status bar
+	statusBar := tview.NewTextView().
 		SetDynamicColors(true).
-		SetText("[yellow]Select a pool or dataset to view details[white]")
+		SetText("[green]1[white]: Logical  [green]2[white]: Physical  [green]Tab[white]: Switch  [green]Ctrl+C[white]: Exit")
 
-	// Split layout: 40% tree, 60% details
-	flex := tview.NewFlex().
-		AddItem(tree, 0, 2, true).   // tree gets 40% (2/5)
-		AddItem(details, 0, 3, false) // details gets 60% (3/5)
+	// Main layout with pages on top, status bar on bottom
+	mainLayout := tview.NewFlex().
+		SetDirection(tview.FlexRow).
+		AddItem(pages, 0, 1, true).
+		AddItem(statusBar, 1, 0, false)
 
-	// Add sample data to tree
-	poolNode := tview.NewTreeNode("tank").
-		SetColor(tview.Styles.SecondaryTextColor)
-	tree.GetRoot().AddChild(poolNode)
-
-	datasetNode := tview.NewTreeNode("tank/data").
-		SetColor(tview.Styles.TertiaryTextColor)
-	poolNode.AddChild(datasetNode)
-
-	// Handle tree selection
-	tree.SetSelectedFunc(func(node *tview.TreeNode) {
-		text := node.GetText()
-		details.SetText("[green]Selected: [white]" + text + "\n\n[yellow]Details will go here...")
+	// Set up key bindings for tab switching
+	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Rune() {
+		case '1':
+			pages.SwitchToPage("Logical")
+			return nil
+		case '2':
+			pages.SwitchToPage("Physical")
+			return nil
+		}
+		switch event.Key() {
+		case tcell.KeyTab:
+			// Toggle between pages
+			current, _ := pages.GetFrontPage()
+			if current == "Logical" {
+				pages.SwitchToPage("Physical")
+			} else {
+				pages.SwitchToPage("Logical")
+			}
+			return nil
+		}
+		return event
 	})
 
-	return app.SetRoot(flex, true).EnableMouse(true).Run()
+	return app.SetRoot(mainLayout, true).EnableMouse(true).Run()
 }
