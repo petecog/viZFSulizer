@@ -6,9 +6,6 @@
             "USERNAME": "vscode"
         }
     },
-    "runArgs": [
-        "--privileged"
-    ],
     "customizations": {
         "vscode": {
             "extensions": [
@@ -42,7 +39,7 @@
                 "editor.formatOnSave": true,
                 "editor.renderWhitespace": "all",
                 "files.trimTrailingWhitespace": true,
-                "terminal.integrated.defaultProfile.linux": "zsh"
+                "terminal.integrated.defaultProfile.linux": "bash"
             }
         }
     },
@@ -55,19 +52,13 @@
         "USER_GID": "2000"
     },
     "postCreateCommand": "bash .devcontainer/setup.sh",
-    "features": {
-        "ghcr.io/devcontainers/features/common-utils:2": {
-            "installZsh": true,
-            "configureZshAsDefaultShell": true,
-            "installOhMyZsh": true,
-            "upgradePackages": true
-        },
-        "ghcr.io/devcontainers/features/go:1": {
-            "version": "latest"
-        }
-    },
     "mounts": [
-        "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
+        "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+        "source=${localWorkspaceFolder}/.local_dev_stuff,target=/home/vscode/.local_dev_stuff,type=bind,consistency=cached",
+        "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached"
+    ],
+    "runArgs": [
+        "--env-file=${localWorkspaceFolder}/.env"
     ],
     "workspaceFolder": "/workspace"
 }
